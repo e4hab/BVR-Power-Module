@@ -7,6 +7,7 @@ import android.view.KeyEvent;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XposedHelpers;
+import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
 
@@ -20,6 +21,16 @@ public class MainModule implements IXposedHookLoadPackage {
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
 
         if (!lpparam.packageName.equals("android")) return;
+
+        XposedBridge.log("BVR Module Loaded into android");
+
+        // FORCE RECOMMENDED (strong hook)
+        XposedHelpers.findAndHookMethod(
+                "android.app.Activity",
+                lpparam.classLoader,
+                "onResume",
+                new XC_MethodHook() {}
+        );
 
         Class<?> pwm = XposedHelpers.findClass(
                 "com.android.server.policy.PhoneWindowManager",
@@ -88,8 +99,19 @@ public class MainModule implements IXposedHookLoadPackage {
 
     private void sendAction(Context context, String type) {
 
-        Intent intent = new Intent("com.ehab.POWER_EVENT");
-        intent.putExtra("type", type);
-        context.sendBroadcast(intent);
+        android.content.SharedPreferences prefs =
+                context.getSharedPreferences("actions", Context.MODE_PRIVATE);
+
+        String pkg = prefs.getString(type, null);
+
+        if (pkg == null) return;
+
+        Intent launch = context.getPackageManager()
+                .getLaunchIntentForPackage(pkg);
+
+        if (launch != null) {
+            launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(launch);
+        }
     }
 }
