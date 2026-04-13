@@ -3,8 +3,9 @@ package com.ehab.module;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.LinearLayout;
+import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 
 public class MainActivity extends Activity {
 
@@ -14,30 +15,33 @@ public class MainActivity extends Activity {
 
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(40, 40, 40, 40);
 
-        Button btn1 = new Button(this);
-        btn1.setText("Click");
+        // Click
+        Button btnClick = new Button(this);
+        btnClick.setText("Click");
+        btnClick.setOnClickListener(v -> openPicker("click"));
 
-        Button btn2 = new Button(this);
-        btn2.setText("Double Click");
+        // Double Click
+        Button btnDouble = new Button(this);
+        btnDouble.setText("Double Click");
+        btnDouble.setOnClickListener(v -> openPicker("double"));
 
-        Button btn3 = new Button(this);
-        btn3.setText("Long Press");
+        // Long Press
+        Button btnLong = new Button(this);
+        btnLong.setText("Long Press");
+        btnLong.setOnClickListener(v -> openPicker("long"));
 
-        btn1.setOnClickListener(v -> open("click"));
-        btn2.setOnClickListener(v -> open("double"));
-        btn3.setOnClickListener(v -> open("long"));
-
-        layout.addView(btn1);
-        layout.addView(btn2);
-        layout.addView(btn3);
+        layout.addView(btnClick);
+        layout.addView(btnDouble);
+        layout.addView(btnLong);
 
         setContentView(layout);
     }
 
-    void open(String type) {
-        Intent i = new Intent(this, ActionPickerActivity.class);
-        i.putExtra("type", type);
-        startActivity(i);
+    private void openPicker(String type) {
+        Intent intent = new Intent(this, ActionPickerActivity.class);
+        intent.putExtra("type", type);
+        startActivity(intent);
     }
 }
