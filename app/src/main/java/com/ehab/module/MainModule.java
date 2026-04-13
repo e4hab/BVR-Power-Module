@@ -1,8 +1,8 @@
 package com.ehab.module;
 
+import android.view.KeyEvent;
 import android.content.Context;
 import android.content.Intent;
-import android.view.KeyEvent;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XposedHelpers;
@@ -16,13 +16,13 @@ public class MainModule implements IXposedHookLoadPackage {
 
         if (!lpparam.packageName.equals("android")) return;
 
-        Class<?> pwm = XposedHelpers.findClass(
-                "com.android.server.policy.PhoneWindowManager",
+        Class<?> ims = XposedHelpers.findClass(
+                "com.android.server.input.InputManagerService",
                 lpparam.classLoader
         );
 
         XposedHelpers.findAndHookMethod(
-                pwm,
+                ims,
                 "interceptKeyBeforeQueueing",
                 KeyEvent.class,
                 int.class,
@@ -36,13 +36,20 @@ public class MainModule implements IXposedHookLoadPackage {
                         if (event.getKeyCode() == KeyEvent.KEYCODE_POWER &&
                                 event.getAction() == KeyEvent.ACTION_DOWN) {
 
+                            Object thisObj = param.thisObject;
+
                             Context context = (Context) XposedHelpers.getObjectField(
-                                    param.thisObject,
+                                    thisObj,
                                     "mContext"
                             );
 
-                            Intent intent = new Intent("com.ehab.TEST");
-                            context.sendBroadcast(intent);
+                            Intent i = context.getPackageManager()
+                                    .getLaunchIntentForPackage("com.android.settings");
+
+                            if (i != null) {
+                                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                context.startActivity(i);
+                            }
                         }
                     }
                 }
