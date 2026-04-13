@@ -1,36 +1,61 @@
 package com.ehab.module;
 
 import android.app.Activity;
-import android.content.SharedPreferences;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.os.Bundle;
-import android.widget.Button;
-import android.widget.LinearLayout;
-import android.widget.Toast;
+import android.widget.ListView;
+import android.widget.ArrayAdapter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ActionPickerActivity extends Activity {
+
+    List<String> appNames = new ArrayList<>();
+    List<String> packageNames = new ArrayList<>();
+    String type;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        String type = getIntent().getStringExtra("type");
+        type = getIntent().getStringExtra("type");
 
-        LinearLayout layout = new LinearLayout(this);
-        layout.setOrientation(LinearLayout.VERTICAL);
+        ListView listView = new ListView(this);
 
-        Button btnBroadcast = new Button(this);
-        btnBroadcast.setText("Set Broadcast");
+        PackageManager pm = getPackageManager();
+        Intent intent = new Intent(Intent.ACTION_MAIN, null);
+        intent.addCategory(Intent.CATEGORY_LAUNCHER);
 
-        btnBroadcast.setOnClickListener(v -> {
-            SharedPreferences prefs = getSharedPreferences("config", MODE_PRIVATE);
-            prefs.edit().putString(type, "broadcast").apply();
+        List<ResolveInfo> apps = pm.queryIntentActivities(intent, 0);
 
-            Toast.makeText(this, type + " saved", Toast.LENGTH_SHORT).show();
+        for (ResolveInfo app : apps) {
+            String name = app.loadLabel(pm).toString();
+            String pkg = app.activityInfo.packageName;
+
+            appNames.add(name);
+            packageNames.add(pkg);
+        }
+
+        ArrayAdapter<String> adapter =
+                new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, appNames);
+
+        listView.setAdapter(adapter);
+
+        listView.setOnItemClickListener((parent, view, position, id) -> {
+
+            String pkg = packageNames.get(position);
+
+            getSharedPreferences("prefs", MODE_PRIVATE)
+                    .edit()
+                    .putString(type, pkg)
+                    .apply();
+
             finish();
         });
 
-        layout.addView(btnBroadcast);
-
-        setContentView(layout);
+        setContentView(listView);
     }
 }
