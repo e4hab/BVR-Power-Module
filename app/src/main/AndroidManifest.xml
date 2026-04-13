@@ -1,7 +1,9 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.ehab.myapp">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application
-        android:label="BVR Module" />
+        android:label="BVR Module"
+        android:allowBackup="true">
+        
+    </application>
 
 </manifest>
