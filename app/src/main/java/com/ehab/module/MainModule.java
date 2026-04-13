@@ -1,54 +1,47 @@
 package com.ehab.module;
 
-import android.view.KeyEvent;
-import android.content.Context;
-import android.content.Intent;
-
 import de.robv.android.xposed.IXposedHookLoadPackage;
-import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
+import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.XC_MethodHook;
+
+import android.view.KeyEvent;
 
 public class MainModule implements IXposedHookLoadPackage {
 
     @Override
-    public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
+    public void handleLoadPackage(final XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
 
         if (!lpparam.packageName.equals("android")) return;
 
-        Class<?> ims = XposedHelpers.findClass(
-                "com.android.server.input.InputManagerService",
+        Class<?> pwm = XposedHelpers.findClass(
+                "com.android.server.policy.PhoneWindowManager",
                 lpparam.classLoader
         );
 
         XposedHelpers.findAndHookMethod(
-                ims,
+                pwm,
                 "interceptKeyBeforeQueueing",
                 KeyEvent.class,
                 int.class,
                 new XC_MethodHook() {
 
                     @Override
-                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
 
                         KeyEvent event = (KeyEvent) param.args[0];
 
-                        if (event.getKeyCode() == KeyEvent.KEYCODE_POWER &&
-                                event.getAction() == KeyEvent.ACTION_DOWN) {
+                        if (event.getKeyCode() == KeyEvent.KEYCODE_POWER) {
 
-                            Object thisObj = param.thisObject;
+                            if (event.getAction() == KeyEvent.ACTION_DOWN) {
 
-                            Context context = (Context) XposedHelpers.getObjectField(
-                                    thisObj,
-                                    "mContext"
-                            );
+                                Runtime.getRuntime().exec(new String[]{
+                                        "su",
+                                        "-c",
+                                        "am broadcast -a com.jozein.xedgepro.PERFORM"
+                                });
 
-                            Intent i = context.getPackageManager()
-                                    .getLaunchIntentForPackage("com.android.settings");
-
-                            if (i != null) {
-                                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                context.startActivity(i);
+                                param.setResult(0);
                             }
                         }
                     }
