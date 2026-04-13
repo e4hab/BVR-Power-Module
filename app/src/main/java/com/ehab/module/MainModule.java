@@ -2,84 +2,60 @@ package com.ehab.module;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.os.SystemClock;
 import android.view.KeyEvent;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
+import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
+import de.robv.android.xposed.XC_MethodHook;
 
-public class MainModule implements IXposedHookLoadPackage {
+public class MainModule implements IXposedHookLoadPackage, IXposedHookZygoteInit {
 
-    private long lastClickTime = 0;
+    private static Context mContext;
+
+    @Override
+    public void initZygote(StartupParam startupParam) throws Throwable {
+    }
 
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
 
-        if (!lpparam.packageName.equals("com.android.systemui")) return;
+        if (!lpparam.packageName.equals("android")) return;
 
-        Class<?> clazz = XposedHelpers.findClass(
-                "com.android.systemui.statusbar.phone.StatusBarKeyguardViewManager",
+        Class<?> pwm = XposedHelpers.findClass(
+                "com.android.server.policy.PhoneWindowManager",
                 lpparam.classLoader
         );
 
         XposedHelpers.findAndHookMethod(
-                clazz,
-                "dispatchKeyEvent",
+                pwm,
+                "interceptKeyBeforeQueueing",
                 KeyEvent.class,
-                new de.robv.android.xposed.XC_MethodHook() {
+                int.class,
+                new XC_MethodHook() {
 
                     @Override
                     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
 
                         KeyEvent event = (KeyEvent) param.args[0];
 
-                        if (event.getKeyCode() == KeyEvent.KEYCODE_POWER
-                                && event.getAction() == KeyEvent.ACTION_DOWN) {
+                        if (event.getKeyCode() == KeyEvent.KEYCODE_POWER &&
+                                event.getAction() == KeyEvent.ACTION_DOWN) {
 
-                            Context context = (Context) XposedHelpers.getObjectField(param.thisObject, "mContext");
+                            Context context = (Context) XposedHelpers.getObjectField(
+                                    param.thisObject,
+                                    "mContext"
+                            );
 
-                            SharedPreferences prefs = context.getSharedPreferences("prefs", Context.MODE_PRIVATE);
+                            Intent intent = new Intent("com.ehab.POWER_ACTION");
+                            context.sendBroadcast(intent);
 
-                            long now = SystemClock.elapsedRealtime();
-
-                            if (now - lastClickTime < 300) {
-                                launch(context, prefs.getString("double", null));
-                            } else {
-                                lastClickTime = now;
-                            }
-
-                            if (event.isLongPress()) {
-                                launch(context, prefs.getString("long", null));
-                            } else {
-                                new Thread(() -> {
-                                    try {
-                                        Thread.sleep(350);
-                                    } catch (Exception ignored) {}
-
-                                    if (SystemClock.elapsedRealtime() - lastClickTime >= 300) {
-                                        launch(context, prefs.getString("click", null));
-                                    }
-                                }).start();
-                            }
-
-                            param.setResult(true);
+                            // prevent default power button behavior
+                            param.setResult(0);
                         }
                     }
                 }
         );
-    }
-
-    private void launch(Context context, String pkg) {
-        if (pkg == null) return;
-
-        try {
-            Intent i = context.getPackageManager().getLaunchIntentForPackage(pkg);
-            if (i != null) {
-                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(i);
-            }
-        } catch (Exception ignored) {}
     }
 }
