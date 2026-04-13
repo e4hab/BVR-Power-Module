@@ -7,32 +7,30 @@
         <!-- Xposed -->
         <meta-data
             android:name="xposedmodule"
-            android:value="true"/>
+            android:value="true" />
 
         <meta-data
             android:name="xposeddescription"
-            android:value="BVR Power Module"/>
+            android:value="BVR Power Module" />
 
         <meta-data
             android:name="xposedminversion"
-            android:value="82"/>
+            android:value="82" />
 
         <!-- Main UI -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
-
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
         </activity>
 
         <!-- Action Picker -->
         <activity
             android:name=".ActionPickerActivity"
-            android:exported="true"/>
+            android:exported="true" />
 
     </application>
 
