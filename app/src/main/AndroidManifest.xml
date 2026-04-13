@@ -5,6 +5,7 @@
         android:label="BVR Module"
         android:icon="@mipmap/ic_launcher">
 
+        <!-- Xposed -->
         <meta-data
             android:name="xposedmodule"
             android:value="true"/>
@@ -17,14 +18,22 @@
             android:name="xposedminversion"
             android:value="82"/>
 
-        <activity android:name=".MainActivity">
+        <!-- Launcher Activity -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+
         </activity>
 
-        <activity android:name=".ActionPickerActivity"/>
+        <!-- Action Picker -->
+        <activity
+            android:name=".ActionPickerActivity"
+            android:exported="true"/>
 
     </application>
 
