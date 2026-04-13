@@ -2,8 +2,7 @@
     package="com.ehab.module">
 
     <application
-        android:label="BVR Module"
-        android:icon="@mipmap/ic_launcher">
+        android:label="BVR Module">
 
         <!-- Xposed -->
         <meta-data
@@ -18,7 +17,7 @@
             android:name="xposedminversion"
             android:value="82"/>
 
-        <!-- Launcher Activity -->
+        <!-- Main UI -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
