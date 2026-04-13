@@ -12,23 +12,22 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 public class MainModule implements IXposedHookLoadPackage {
 
-    long lastClick = 0;
+    private long lastClickTime = 0;
 
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
 
-        if (!lpparam.packageName.equals("android")) return;
+        if (!lpparam.packageName.equals("com.android.systemui")) return;
 
-        Class<?> phoneWindowManager = XposedHelpers.findClass(
-                "com.android.server.policy.PhoneWindowManager",
+        Class<?> clazz = XposedHelpers.findClass(
+                "com.android.systemui.statusbar.phone.StatusBarKeyguardViewManager",
                 lpparam.classLoader
         );
 
         XposedHelpers.findAndHookMethod(
-                phoneWindowManager,
-                "interceptKeyBeforeQueueing",
+                clazz,
+                "dispatchKeyEvent",
                 KeyEvent.class,
-                int.class,
                 new de.robv.android.xposed.XC_MethodHook() {
 
                     @Override
@@ -45,10 +44,10 @@ public class MainModule implements IXposedHookLoadPackage {
 
                             long now = SystemClock.elapsedRealtime();
 
-                            if (now - lastClick < 300) {
+                            if (now - lastClickTime < 300) {
                                 launch(context, prefs.getString("double", null));
                             } else {
-                                lastClick = now;
+                                lastClickTime = now;
                             }
 
                             if (event.isLongPress()) {
@@ -59,13 +58,13 @@ public class MainModule implements IXposedHookLoadPackage {
                                         Thread.sleep(350);
                                     } catch (Exception ignored) {}
 
-                                    if (SystemClock.elapsedRealtime() - lastClick >= 300) {
+                                    if (SystemClock.elapsedRealtime() - lastClickTime >= 300) {
                                         launch(context, prefs.getString("click", null));
                                     }
                                 }).start();
                             }
 
-                            param.setResult(0);
+                            param.setResult(true);
                         }
                     }
                 }
@@ -76,10 +75,10 @@ public class MainModule implements IXposedHookLoadPackage {
         if (pkg == null) return;
 
         try {
-            Intent intent = context.getPackageManager().getLaunchIntentForPackage(pkg);
-            if (intent != null) {
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(intent);
+            Intent i = context.getPackageManager().getLaunchIntentForPackage(pkg);
+            if (i != null) {
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(i);
             }
         } catch (Exception ignored) {}
     }
