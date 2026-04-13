@@ -1,3 +1,29 @@
 plugins {
     id 'com.android.application'
 }
+
+android {
+    compileSdk 33
+
+    defaultConfig {
+        applicationId "com.ehab.myapp"
+        minSdk 24
+        targetSdk 33
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compileOnly 'de.robv.android.xposed:api:82'
+}
