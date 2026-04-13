@@ -1,20 +1,43 @@
 package com.ehab.module;
 
-import de.robv.android.xposed.IXposedHookLoadPackage;
-import de.robv.android.xposed.callbacks.XC_LoadPackage;
-import android.util.Log;
+import android.app.Activity;
+import android.content.Intent;
+import android.os.Bundle;
+import android.widget.LinearLayout;
+import android.widget.Button;
 
-public class MainModule implements IXposedHookLoadPackage {
+public class MainActivity extends Activity {
 
     @Override
-    public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-        if (!lpparam.packageName.equals("android")) return;
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
 
-        Log.i("BVR_Module", "Module is working");
+        Button btn1 = new Button(this);
+        btn1.setText("Click");
 
-        Runtime.getRuntime().exec(
-            "am broadcast -a com.jozein.xedgepro.PERFORM -e data 33030236F6D6E216272656C637F6C6574796F6E637E224652555C64796D61647560236F6D6E216272656C637F6C6574796F6E637E224652555C64796D6164756E2255636F62746E4F67714364796679647973556474796E6763702"
-        );
+        Button btn2 = new Button(this);
+        btn2.setText("Double Click");
+
+        Button btn3 = new Button(this);
+        btn3.setText("Long Press");
+
+        btn1.setOnClickListener(v -> open("click"));
+        btn2.setOnClickListener(v -> open("double"));
+        btn3.setOnClickListener(v -> open("long"));
+
+        layout.addView(btn1);
+        layout.addView(btn2);
+        layout.addView(btn3);
+
+        setContentView(layout);
+    }
+
+    void open(String type) {
+        Intent i = new Intent(this, ActionPickerActivity.class);
+        i.putExtra("type", type);
+        startActivity(i);
     }
 }
